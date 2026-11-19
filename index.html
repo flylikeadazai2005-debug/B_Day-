@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>For Piku 🎂</title>
+<script>
+/* ================= ✏️ EDIT HERE ================= */
+const SETTINGS = {
+  name: "Piku",
+  password: "Piku_33,184,011.!",
+  passwordHint: "",   // optional, e.g. "Only you know this 😉"
+
+  // Timer start date: YEAR-MONTH-DAY T HOUR:MIN:SEC +05:30 (India time)
+  timerStart: "2024-01-01T00:00:00+05:30",
+  timerLabel: "Time since our story began ❤️",
+  timerTop: 50,       // timer position: 0 = top, 50 = middle, 100 = bottom
+
+  images: ["slide1.png", "slide2.png", "slide3.png", "slide4.png"],
+  nextMaxSize: 2.2,   // how big Next can grow on slide 1
+
+  slide1Warnings: [
+    "Exit? On your birthday? Not allowed 😤",
+    "Notice the Next button getting bigger? Take the hint 👀",
+    "Error 404: Exit button not found 🙃",
+    "Piku. Just. Press. Next. 😒"
+  ],
+  slide2Warnings: [
+    "Nope. You're still not allowed to leave 😌",
+    "⚠️ Exit is disabled for birthday girls",
+    "You can't escape this, Piku 😂"
+  ],
+  wrongPassword: "Wrong password. Try again 🤨"
+};
+/* ================================================ */
+</script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:#111;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+#app{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
+.frame{position:relative;overflow:hidden;background:#000;width:min(100vw,calc(100vh*9/16));height:min(100vh,calc(100vw*16/9))}
+@supports (height:100dvh){.frame{width:min(100vw,calc(100dvh*9/16));height:min(100dvh,calc(100vw*16/9))}}
+@media (min-width:700px){.frame{border-radius:18px}}
+.slide{position:absolute;inset:0;opacity:0;pointer-events:none;transition:opacity .6s}
+.slide.on{opacity:1;pointer-events:auto}
+.slide img{width:100%;height:100%;object-fit:cover;display:block}
+.miss{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#888;padding:10%;text-align:center;font-size:.8em}
+.bar{position:absolute;left:0;right:0;bottom:6%;display:flex;justify-content:center;align-items:center;gap:1.2em;z-index:2}
+.btn{border:none;border-radius:999px;padding:.65em 1.6em;font-size:1em;font-weight:700;cursor:pointer;touch-action:manipulation;transition:transform .25s ease}
+.btn:active{filter:brightness(.9)}
+.next{background:#ff4f8b;color:#fff}
+.exit{background:rgba(255,255,255,.9);color:#333}
+.timer{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:1;background:rgba(0,0,0,.45);color:#fff;padding:.7em 1.1em;border-radius:16px;text-align:center;max-width:92%}
+.timer .label{font-size:.8em;margin-bottom:.35em}
+.nums{display:flex;gap:.7em;justify-content:center}
+.u{display:flex;flex-direction:column;align-items:center;min-width:2.4em}
+.u b{font-size:1.5em;font-variant-numeric:tabular-nums}
+.u span{font-size:.62em;opacity:.85;text-transform:uppercase;letter-spacing:.05em}
+.lock{position:absolute;inset:0;z-index:5;background:#2b1535;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.7em;padding:10%;text-align:center;transition:opacity .6s}
+.lock.gone{opacity:0;pointer-events:none}
+.lock .big{font-size:3em}
+.lock h2{font-size:1.3em}
+.lock .small{font-size:.85em;opacity:.85}
+#pw{width:100%;max-width:15em;padding:.7em 1em;border-radius:12px;border:2px solid #ff4f8b;background:#fff;color:#111;font-size:max(16px,1em);text-align:center;outline:none}
+.show{font-size:.8em;opacity:.85;display:flex;align-items:center;gap:.4em}
+.err{color:#ff7a7a;font-weight:700;min-height:1.3em}
+.shake{animation:shake .4s}
+@keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
+.modal{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;padding:20px}
+.modal.show{display:flex}
+.box{background:#fff;border-radius:18px;padding:22px 20px;width:100%;max-width:320px;text-align:center;animation:pop .35s ease-out}
+@keyframes pop{0%{transform:scale(.5);opacity:0}70%{transform:scale(1.06);opacity:1}100%{transform:scale(1)}}
+.micon{font-size:42px}
+.box h3{color:#e0245e;margin:6px 0 8px;font-size:20px}
+.box p{color:#333;font-size:16px;line-height:1.5;margin-bottom:18px}
+#mok{background:#ff4f8b;color:#fff;border:none;border-radius:999px;padding:10px 30px;font-size:16px;font-weight:700}
+</style>
+</head>
+<body>
+<div id="app"><div class="frame" id="frame">
+
+  <section class="slide on"><img alt="">
+    <div class="bar"><button class="btn exit" id="exit1">Exit</button><button class="btn next" id="next1">Next</button></div>
+  </section>
+
+  <section class="slide"><img alt="">
+    <div class="bar"><button class="btn exit" id="exit2">Exit</button><button class="btn next" id="next2">Next</button></div>
+  </section>
+
+  <section class="slide"><img alt="">
+    <div class="timer" id="timer">
+      <div class="label" id="tlabel"></div>
+      <div class="nums">
+        <div class="u"><b id="td">0</b><span>days</span></div>
+        <div class="u"><b id="th">00</b><span>hours</span></div>
+        <div class="u"><b id="tm">00</b><span>mins</span></div>
+        <div class="u"><b id="ts">00</b><span>secs</span></div>
+      </div>
+    </div>
+    <div class="bar"><button class="btn next" id="next3">Next</button></div>
+    <div class="lock" id="lock">
+      <div class="big">🔒</div>
+      <h2>This slide is locked</h2>
+      <p class="small">Enter the password to open it</p>
+      <input id="pw" type="password" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Password">
+      <label class="show"><input type="checkbox" id="showpw"> Show password</label>
+      <button class="btn next" id="unlock">Unlock</button>
+      <p class="err" id="err"></p>
+      <p class="small" id="hint"></p>
+    </div>
+  </section>
+
+  <section class="slide"><img alt=""></section>
+
+</div></div>
+
+<div class="modal" id="modal"><div class="box" id="box">
+  <div class="micon" id="micon">⚠️</div><h3 id="mtitle">Warning</h3><p id="mtext"></p><button id="mok">OK</button>
+</div></div>
+
+<script>
+const S = SETTINGS, $ = id => document.getElementById(id);
+const frame = $('frame'), slides = [...document.querySelectorAll('.slide')];
+function fit(){ frame.style.fontSize = (frame.clientWidth / 22) + 'px'; }
+addEventListener('resize', fit); fit();
+
+slides.forEach((s, i) => {
+  const img = s.querySelector('img');
+  img.onerror = () => { const d = document.createElement('div'); d.className = 'miss'; d.textContent = 'Missing image: ' + S.images[i]; img.replaceWith(d); };
+  img.src = S.images[i];
+});
+
+let cur = 0;
+function go(i){ slides[cur].classList.remove('on'); cur = i; slides[i].classList.add('on'); }
+
+const modal = $('modal'), box = $('box');
+function popup(text, icon = '⚠️', title = 'Warning'){
+  $('micon').textContent = icon; $('mtitle').textContent = title; $('mtext').textContent = text;
+  modal.classList.add('show'); box.style.animation = 'none'; void box.offsetWidth; box.style.animation = '';
+}
+$('mok').onclick = () => modal.classList.remove('show');
+
+let grow = 1, w1 = 0, w2 = 0;
+$('exit1').onclick = () => {
+  popup(S.slide1Warnings[w1++ % S.slide1Warnings.length]);
+  grow = Math.min(grow + 0.25, S.nextMaxSize);
+  $('next1').style.transform = 'scale(' + grow + ')';
+};
+$('exit2').onclick = () => popup(S.slide2Warnings[w2++ % S.slide2Warnings.length]);
+$('next1').onclick = () => go(1);
+$('next2').onclick = () => go(2);
+$('next3').onclick = () => go(3);
+
+$('hint').textContent = S.passwordHint;
+$('showpw').onchange = e => $('pw').type = e.target.checked ? 'text' : 'password';
+function tryUnlock(){
+  const p = $('pw');
+  if (p.value.trim() === S.password){ p.blur(); $('lock').classList.add('gone'); }
+  else {
+    $('err').textContent = 'Access denied ❌';
+    p.classList.remove('shake'); void p.offsetWidth; p.classList.add('shake');
+    popup(S.wrongPassword, '⛔', 'Access denied');
+  }
+}
+$('unlock').onclick = tryUnlock;
+$('pw').addEventListener('keydown', e => { if (e.key === 'Enter') tryUnlock(); });
+$('pw').addEventListener('input', () => $('err').textContent = '');
+
+$('tlabel').textContent = S.timerLabel;
+$('timer').style.top = S.timerTop + '%';
+const start = new Date(S.timerStart).getTime();
+const pad = n => String(n).padStart(2, '0');
+function tick(){
+  if (isNaN(start)) { $('tlabel').textContent = 'Check timerStart in settings'; return; }
+  let t = Math.max(0, Math.floor((Date.now() - start) / 1000));
+  const d = Math.floor(t / 86400); t %= 86400;
+  const h = Math.floor(t / 3600); t %= 3600;
+  $('td').textContent = d.toLocaleString(); $('th').textContent = pad(h);
+  $('tm').textContent = pad(Math.floor(t / 60)); $('ts').textContent = pad(t % 60);
+}
+tick(); setInterval(tick, 1000);
+</script>
+</body>
+</html>
